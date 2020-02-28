@@ -34,16 +34,16 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-int lum = 0;
-int lum_zad = 20;
-int Received[10];
+int lum = 0; ///< Naterzenie z czujnika
+int lum_zad = 20; ///< Naterzenie zadane
+int Received[10]; ///< Tablica przechowujaca wartosc zadana otrzymana przez UART
 
-float Kp = 0.27f;
-float Kd = 0.001f;
-float Ki = 0.08f;
+float Kp = 0.27f; ///< wspolczynnik Kp dla regulatora PID
+float Kd = 0.001f; ///< wspolczynnik Kd dla regulatora PID
+float Ki = 0.08f; ///< wspolczynnik Ki dla regulatora PID
 I2C_HandleTypeDef hi2c1;
 
-arm_pid_instance_f32 PID;
+arm_pid_instance_f32 PID; ///< Regultor PID
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -89,12 +89,19 @@ static void MX_TIM4_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+/*!
+   Callback na przerwania UART po otrzymaniu wartosci zadanej
+ */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *htim)
 {
 	//__HAL_TIM_SET_COMPARE(&htim3,TIM_CHANNEL_3, atoi(&Received));
 	lum_zad=atoi(&Received);
 	HAL_UART_Receive_IT(&huart3, &Received, 3);
 }
+/*!
+ 	 Callback na 1 s. taimer ktory ustawia wyswietlacz.
+ */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim4)
 {
 	SetLCDValues(lum_zad, lum);
@@ -113,7 +120,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 
-  /** Parametry nastawy regulatora PID **/
+  /*! Parametry nastawy regulatora PID **/
   PID.Kp=Kp;
   PID.Ki=Ki;
   PID.Kd=Kd;
@@ -152,10 +159,10 @@ int main(void)
   HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_3);
   HAL_UART_Receive_IT(&huart3, &Received, 3);
 
-  lcd_init ();
-  BH1750_Init(&hi2c2);
-  BH1750_SetMode(CONTINUOUS_HIGH_RES_MODE);
-  arm_pid_init_f32(&PID, 1);
+  lcd_init (); //! inicjalizacja wyswietlacza
+  BH1750_Init(&hi2c2); //! inicjalizacja czujnika
+  BH1750_SetMode(CONTINUOUS_HIGH_RES_MODE); //! wybor trybu pomiarowego
+  arm_pid_init_f32(&PID, 1); //! inicjalizacja PIDa
   /* USER CODE END 2 */
  
  
@@ -167,8 +174,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  ReadIntegerLight(&lum);
-	  SetPWM(lum_zad, lum, &PID,&htim3);
+	  ReadIntegerLight(&lum); //! pomiar naterzenia swiatla
+	  SetPWM(lum_zad, lum, &PID,&htim3); //! regulacja
 	  HAL_Delay(150);
   }
   /* USER CODE END 3 */
